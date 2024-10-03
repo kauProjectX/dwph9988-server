@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model members {
+  members_id Int      @id @default(autoincrement())
+  user_id    String   @unique
+  password   String?
+  create_at  DateTime @default(now())
+  update_at  DateTime @updatedAt
+
+  // Relations
+  members_info                   members_info?
+  devices                        devices[]
+  protect_protect_id_to_members  protect[]     @relation("protect_members_1")
+  protect_protect_id_to_members2 protect[]     @relation("protect_members_2")
+  rewards                        rewards[]
+}
+
+model rewards {
+  rewards_id   Int       @id @default(autoincrement())
+  money        Int?
+  content      String?
+  prefix_money Int?
+  create_at    DateTime?
+  members_id   Int
+
+  // Relation
+  members_info      members_info @relation(fields: [members_id], references: [members_id])
+  members           members?     @relation(fields: [membersMembers_id], references: [members_id])
+  membersMembers_id Int?
+}
+
+model news {
+  quizs_id Int     @id @default(autoincrement())
+  content  String?
+  choice_1 String?
+  choice_2 String?
+  choice_3 String?
+  choice_4 String?
+  answer   Int?
+
+  // Relation
+  news_image news_image[]
+}
+
+model members_info {
+  members_id   Int     @id
+  name         String?
+  phone_number String?
+  birthday     String?
+  user_type    Int?
+
+  // Relation
+  members members   @relation(fields: [members_id], references: [members_id])
+  rewards rewards[]
+}
+
+model protect {
+  protect_id  Int @id @default(autoincrement())
+  members_id2 Int
+  members_id  Int
+
+  // Relations
+  members_protect_id_to_members  members @relation("protect_members_1", fields: [members_id], references: [members_id])
+  members_protect_id_to_members2 members @relation("protect_members_2", fields: [members_id2], references: [members_id])
+}
+
+model heat_wave {
+  heat_wave_id     Int     @id @default(autoincrement())
+  location         String?
+  temperature      Int?
+  feel_temperature Int?
+  max_temperature  Int?
+}
+
+model news_image {
+  image_id  String
+  quizs_id  Int
+  image_url String?
+
+  // Relations
+  news news @relation(fields: [quizs_id], references: [quizs_id])
+
+  @@id([image_id, quizs_id])
+}
+
+model devices {
+  devices_id        Int      @id @default(autoincrement())
+  devices_token     String?
+  last_logged_in_at DateTime @default(now())
+  members_id        Int
+
+  // Relation
+  members members @relation(fields: [members_id], references: [members_id])
+}
