@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat_cicd
 
 jobs:
   build-and-deploy:
@@ -33,10 +34,12 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/my-node-app:${{ github.sha }} .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/my-node-app:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/my-node-app:latest
 
       - name: Push Docker image to Docker Hub
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:latest
 
       - name: Deploy to server
         env:
@@ -44,7 +47,7 @@ jobs:
           USERNAME: ${{ secrets.SERVER_USERNAME }}
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
+          printf "%s\n" "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/home/$USERNAME/app/
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST 'docker-compose -f /home/$USERNAME/app/docker-compose.yml pull && docker-compose -f /home/$USERNAME/app/docker-compose.yml up -d'
+          scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/root/app/
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST 'docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_ACCESS_TOKEN }} && docker-compose -f /root/app/docker-compose.yml pull && docker-compose -f /root/app/docker-compose.yml up -d'
