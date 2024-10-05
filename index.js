@@ -1,7 +1,7 @@
-const express = require("express");
+import express from 'express';
+import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
-const { swaggerUi, swaggerDocs } = require('./src/config/swagger/swagger'); 
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
