@@ -47,5 +47,5 @@ jobs:
         run: |
           printf "%s\n" "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/home/$USERNAME/app/
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST 'docker-compose -f /home/$USERNAME/app/docker-compose.yml pull && docker-compose -f /home/$USERNAME/app/docker-compose.yml up -d'
+          scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/root/app/
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST 'docker-compose -f /root/app/docker-compose.yml pull && docker-compose -f /root/app/docker-compose.yml up -d'
