@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   web:
-    image: your-dockerhub-username/my-node-app:latest
+    image: parkjungyu26/my-node-app:latest
     ports:
       - "8080:3000" # 추후 도메인 생기면 80으로
     restart: always
