@@ -1,9 +1,9 @@
-import express from 'express';
-import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
+import express from "express";
+import { swaggerUi, swaggerDocs } from "./src/config/swagger/swagger.js";
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

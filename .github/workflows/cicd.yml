@@ -3,15 +3,13 @@ name: Node.js Docker CI/CD
 on:
   push:
     branches:
-      - main
-      - develop
-      - "*"
+      - "*" # 모든 브랜치에 대해 Push 이벤트 발생 시 실행
   pull_request:
     branches:
-      - "*"
+      - main # main으로 PR이 오면 실행
 
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-20.04
 
     steps:
@@ -44,6 +42,15 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:latest
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' # main 브랜치일 때만 배포 실행
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Deploy to server
         env:
