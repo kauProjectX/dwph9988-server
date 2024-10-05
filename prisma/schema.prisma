@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model members {
+  members_idx BigInt   @id @default(autoincrement())
+  user_id     String   @unique
+  password    String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  rewards            rewards[]
+  members_info       members_info?
+  protect_as_member  protect[]     @relation("ProtectAsMember")
+  protect_as_member2 protect[]     @relation("ProtectAsMember2")
+  heat_wave          heat_wave[]
+  devices            devices[]
+}
+
+model rewards {
+  rewards_idx  BigInt   @id @default(autoincrement())
+  members_id   BigInt
+  money        BigInt
+  content      String?
+  prefix_money BigInt
+  created_at   DateTime @default(now())
+
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
+}
+
+model news {
+  quizs_idx BigInt  @id @default(autoincrement())
+  content   String?
+  choice_1  String?
+  choice_2  String?
+  choice_3  String?
+  choice_4  String?
+  answer    Int?
+
+  // Relations
+  news_image news_image[]
+}
+
+model members_info {
+  members_idx  BigInt    @id
+  name         String    @default("") // Assuming name should not be NULL
+  phone_number String?
+  birthday     DateTime? // Allow NULL as birthday might not be provided
+  user_type    Int? // Assuming user_type is optional
+
+  // Foreign key
+  members members @relation(fields: [members_idx], references: [members_idx])
+}
+
+model protect {
+  protect_idx BigInt @id @default(autoincrement())
+  members_id  BigInt
+  members_id2 BigInt
+
+  // Foreign keys
+  member1 members @relation("ProtectAsMember", fields: [members_id], references: [members_idx])
+  member2 members @relation("ProtectAsMember2", fields: [members_id2], references: [members_idx])
+}
+
+model heat_wave {
+  heat_wave_idx    BigInt @id @default(autoincrement())
+  members_id       BigInt
+  location         String @default("") // Assuming location should not be NULL
+  temperature      Int? // Temperature fields are kept optional
+  feel_temperature Int?
+  max_temperature  Int?
+
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
+}
+
+model news_image {
+  image_idx String  @id
+  quizs_idx BigInt
+  image_url String? // Image URL might be optional
+
+  // Foreign key
+  news news @relation(fields: [quizs_idx], references: [quizs_idx])
+}
+
+model devices {
+  devices_idx       BigInt   @id @default(autoincrement())
+  devices_token     String? // Assuming devices_token can be NULL
+  last_logged_in_at DateTime @default(now()) // Automatically set to the current timestamp
+  members_id        BigInt
+
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
+}
