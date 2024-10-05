@@ -14,94 +14,94 @@ datasource db {
 }
 
 model members {
-  members_id Int      @id @default(autoincrement())
-  user_id    String   @unique
-  password   String?
-  create_at  DateTime @default(now())
-  update_at  DateTime @updatedAt
+  members_idx BigInt   @id @default(autoincrement())
+  user_id     String   @unique
+  password    String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   // Relations
-  members_info                   members_info?
-  devices                        devices[]
-  protect_protect_id_to_members  protect[]     @relation("protect_members_1")
-  protect_protect_id_to_members2 protect[]     @relation("protect_members_2")
-  rewards                        rewards[]
+  rewards            rewards[]
+  members_info       members_info?
+  protect_as_member  protect[]     @relation("ProtectAsMember")
+  protect_as_member2 protect[]     @relation("ProtectAsMember2")
+  heat_wave          heat_wave[]
+  devices            devices[]
 }
 
 model rewards {
-  rewards_id   Int       @id @default(autoincrement())
-  money        Int?
+  rewards_idx  BigInt   @id @default(autoincrement())
+  members_id   BigInt
+  money        BigInt
   content      String?
-  prefix_money Int?
-  create_at    DateTime?
-  members_id   Int
+  prefix_money BigInt
+  created_at   DateTime @default(now())
 
-  // Relation
-  members_info      members_info @relation(fields: [members_id], references: [members_id])
-  members           members?     @relation(fields: [membersMembers_id], references: [members_id])
-  membersMembers_id Int?
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
 }
 
 model news {
-  quizs_id Int     @id @default(autoincrement())
-  content  String?
-  choice_1 String?
-  choice_2 String?
-  choice_3 String?
-  choice_4 String?
-  answer   Int?
+  quizs_idx BigInt  @id @default(autoincrement())
+  content   String?
+  choice_1  String?
+  choice_2  String?
+  choice_3  String?
+  choice_4  String?
+  answer    Int?
 
-  // Relation
+  // Relations
   news_image news_image[]
 }
 
 model members_info {
-  members_id   Int     @id
-  name         String?
+  members_idx  BigInt    @id
+  name         String    @default("") // Assuming name should not be NULL
   phone_number String?
-  birthday     String?
-  user_type    Int?
+  birthday     DateTime? // Allow NULL as birthday might not be provided
+  user_type    Int? // Assuming user_type is optional
 
-  // Relation
-  members members   @relation(fields: [members_id], references: [members_id])
-  rewards rewards[]
+  // Foreign key
+  members members @relation(fields: [members_idx], references: [members_idx])
 }
 
 model protect {
-  protect_id  Int @id @default(autoincrement())
-  members_id2 Int
-  members_id  Int
+  protect_idx BigInt @id @default(autoincrement())
+  members_id  BigInt
+  members_id2 BigInt
 
-  // Relations
-  members_protect_id_to_members  members @relation("protect_members_1", fields: [members_id], references: [members_id])
-  members_protect_id_to_members2 members @relation("protect_members_2", fields: [members_id2], references: [members_id])
+  // Foreign keys
+  member1 members @relation("ProtectAsMember", fields: [members_id], references: [members_idx])
+  member2 members @relation("ProtectAsMember2", fields: [members_id2], references: [members_idx])
 }
 
 model heat_wave {
-  heat_wave_id     Int     @id @default(autoincrement())
-  location         String?
-  temperature      Int?
+  heat_wave_idx    BigInt @id @default(autoincrement())
+  members_id       BigInt
+  location         String @default("") // Assuming location should not be NULL
+  temperature      Int? // Temperature fields are kept optional
   feel_temperature Int?
   max_temperature  Int?
+
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
 }
 
 model news_image {
-  image_id  String
-  quizs_id  Int
-  image_url String?
+  image_idx String  @id
+  quizs_idx BigInt
+  image_url String? // Image URL might be optional
 
-  // Relations
-  news news @relation(fields: [quizs_id], references: [quizs_id])
-
-  @@id([image_id, quizs_id])
+  // Foreign key
+  news news @relation(fields: [quizs_idx], references: [quizs_idx])
 }
 
 model devices {
-  devices_id        Int      @id @default(autoincrement())
-  devices_token     String?
-  last_logged_in_at DateTime @default(now())
-  members_id        Int
+  devices_idx       BigInt   @id @default(autoincrement())
+  devices_token     String? // Assuming devices_token can be NULL
+  last_logged_in_at DateTime @default(now()) // Automatically set to the current timestamp
+  members_id        BigInt
 
-  // Relation
-  members members @relation(fields: [members_id], references: [members_id])
+  // Foreign key
+  members members @relation(fields: [members_id], references: [members_idx])
 }
