@@ -16,8 +16,5 @@ RUN npm ci
 # Copy app source
 COPY . .
 
-# Expose port 3000
-EXPOSE 3000
-
-# Start the application
+# Start the application with the PORT environment variable
 CMD ["node", "index.js"]

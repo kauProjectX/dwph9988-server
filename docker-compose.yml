@@ -3,5 +3,17 @@ services:
   web:
     image: parkjungyu26/my-node-app:latest
     ports:
-      - "8080:3000" # 추후 도메인 생기면 80으로
+      - "${HOST_PORT}:${CONTAINER_PORT}" # 호스트 포트와 컨테이너 포트를 환경 변수로 매핑
     restart: always
+    environment:
+      - PORT=${CONTAINER_PORT} # 컨테이너 내부에서 PORT 환경 변수로 사용
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${CONTAINER_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
