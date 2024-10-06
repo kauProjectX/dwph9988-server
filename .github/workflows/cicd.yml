@@ -98,6 +98,9 @@ jobs:
       - name: Tear down Docker Compose
         if: always()
         run: docker-compose -f docker-compose.yml down
+        env:
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
 
   deploy:
     runs-on: ubuntu-20.04
