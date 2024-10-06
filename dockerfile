@@ -4,8 +4,8 @@ FROM node:20-alpine
 # Create app directory
 WORKDIR /usr/src/app
 
-# Install necessary build tools
-RUN apk add --no-cache python3 make g++
+# Install necessary build tools and curl
+RUN apk add --no-cache python3 make g++ curl
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
