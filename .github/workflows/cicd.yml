@@ -3,7 +3,7 @@ name: Node.js Docker CI/CD
 on:
   push:
     branches:
-      - "*" # 모든 브랜치에 대해 Push 이벤트 발생 시 실행
+      - '*' # 모든 브랜치에 대해 Push 이벤트 발생 시 실행
   pull_request:
     branches:
       - main # main으로 PR이 오면 실행
@@ -42,7 +42,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
@@ -76,6 +76,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Create logs directory
+        run: mkdir -p logs # 호스트의 logs 디렉토리 생성
 
       - name: Run integration test using Docker Compose
         run: |
@@ -121,6 +124,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST '
             echo "$DOCKER_ACCESS_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin &&
             docker compose -f /root/app/docker-compose.yml down &&
-            HOST_PORT=${HOST_PORT} CONTAINER_PORT=${CONTAINER_PORT} docker compose -f /root/app/docker-compose.yml pull &&
-            HOST_PORT=${HOST_PORT} CONTAINER_PORT=${CONTAINER_PORT} docker compose -f /root/app/docker-compose.yml up -d
+            docker compose -f /root/app/docker-compose.yml pull &&
+            docker compose -f /root/app/docker-compose.yml up -d
           '
