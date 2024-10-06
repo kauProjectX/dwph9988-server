@@ -1,6 +1,5 @@
-// swagger.js
-const swaggerJsDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
+import swaggerJsDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 // Swagger 설정 옵션
 const swaggerOptions = {
@@ -9,7 +8,7 @@ const swaggerOptions = {
     info: {
       title: "ProjectX",
       version: "1.0.0",
-      description: "API documentation for projextX",
+      description: "API documentation for ProjectX",
     },
     servers: [
       {
@@ -23,7 +22,5 @@ const swaggerOptions = {
 // Swagger Docs
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
-module.exports = {
-  swaggerUi,
-  swaggerDocs,
-};
+// ESM 방식으로 내보내기
+export { swaggerUi, swaggerDocs };
