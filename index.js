@@ -13,8 +13,8 @@ app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
 
-// 서버 시작
-app.listen(PORT, () => {
+// 서버 시작 (0.0.0.0으로 바인딩하여 외부 접근 허용)
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });

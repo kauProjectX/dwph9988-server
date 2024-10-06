@@ -6,15 +6,15 @@ services:
       - '${HOST_PORT}:${CONTAINER_PORT}' # 환경 변수를 그대로 사용하여 포트 매핑
     restart: always
     environment:
-      PORT: ${CONTAINER_PORT} # 환경 변수 PORT 설정
+      - PORT=${CONTAINER_PORT} # 환경 변수 PORT 설정 (명확히 문자열로 전달)
     healthcheck:
       test: [
           'CMD-SHELL',
           'curl -f http://localhost:${CONTAINER_PORT} || exit 1',
         ] # ${CONTAINER_PORT}를 사용
-      interval: 30s
+      interval: 1m30s # 서버가 완전히 시작될 시간을 제공하기 위해 90초로 설정
       timeout: 10s
-      retries: 3
+      retries: 5
     logging:
       driver: 'json-file'
       options:
