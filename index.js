@@ -1,16 +1,16 @@
-import "dotenv/config";
-import express from "express";
-import { swaggerUi, swaggerDocs } from "./src/config/swagger/swagger.js";
+import 'dotenv/config';
+import express from 'express';
+import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 
 const app = express();
-const PORT = process.env.PORT; // 기본 포트 설정 추가
+const PORT = process.env.PORT; // 기본 포트를 환경 변수로 설정, 기본값 제거
 
 // Swagger 경로 설정
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // 기본 경로 설정
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
+app.get('/', (req, res) => {
+  res.send('Hello, World!');
 });
 
 // 서버 시작
