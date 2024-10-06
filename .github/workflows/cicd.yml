@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Validate Environment Variables
         run: |
-          REQUIRED_ENV_VARS=("HOST" "USERNAME" "PRIVATE_KEY" "DOCKER_ACCESS_TOKEN" "DOCKER_USERNAME")
+          REQUIRED_ENV_VARS=("HOST" "USERNAME" "PRIVATE_KEY" "DOCKER_ACCESS_TOKEN" "DOCKER_USERNAME" "HOST_PORT" "CONTAINER_PORT")
           for var in "${REQUIRED_ENV_VARS[@]}"
           do
             if [ -z "${!var}" ]; then
@@ -28,6 +28,8 @@ jobs:
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
           DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
 
   build-and-test:
     runs-on: ubuntu-20.04
@@ -81,18 +83,24 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Create logs directory
-        run: mkdir -p logs # 호스트의 logs 디렉토리 생성
+        run: mkdir -p logs
 
       - name: Run integration test using Docker Compose
+        env:
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
         run: |
           docker-compose -f docker-compose.yml up -d
-          sleep 90 # 서버가 시작될 시간을 충분히 주기 위해 90초 대기
-          docker-compose -f docker-compose.yml ps # 컨테이너 상태 확인
-          docker-compose -f docker-compose.yml logs --tail=50 # 마지막 50줄 로그 확인
-          docker-compose -f docker-compose.yml exec -T web curl -f http://localhost:3000 || exit 1 # 포트 테스트
+          sleep 90 # 서버가 시작될 시간을 충분히 주기 위해 대기
+          docker-compose -f docker-compose.yml ps
+          docker-compose -f docker-compose.yml logs --tail=50
+          docker-compose -f docker-compose.yml exec -T web curl -f http://localhost:${CONTAINER_PORT} || exit 1
 
       - name: Tear down Docker Compose
         if: always()
+        env:
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
         run: docker-compose -f docker-compose.yml down
 
   deploy:
