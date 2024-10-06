@@ -3,7 +3,7 @@ import express from 'express';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 
 const app = express();
-const PORT = process.env.PORT; // 기본 포트를 환경 변수로 설정, 기본값 제거
+const PORT = process.env.PORT || 3000;
 
 // Swagger 경로 설정
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));

@@ -22,5 +22,8 @@ COPY . .
 # Create log directory during build
 RUN mkdir -p /usr/src/app/logs
 
+# Expose port 3000 for clarity (or specify a different port if needed)
+EXPOSE 3000
+
 # Start the application with the PORT environment variable
 CMD ["node", "index.js"]
