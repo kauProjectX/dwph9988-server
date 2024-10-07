@@ -1,7 +1,22 @@
-version: "3.8"
+version: '3.8'
 services:
   web:
     image: parkjungyu26/my-node-app:latest
     ports:
-      - "8080:3000" # 추후 도메인 생기면 80으로
+      - '${HOST_PORT}:${CONTAINER_PORT}' # GitHub Actions에서 전달된 환경 변수를 사용하여 포트 매핑
     restart: always
+    environment:
+      - PORT=${CONTAINER_PORT} # 환경 변수 PORT 설정
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'curl -f http://localhost:${CONTAINER_PORT} || exit 1']
+      interval: 1m30s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    volumes:
+      - ./logs:/usr/src/app/logs # 호스트의 logs 폴더를 컨테이너와 공유

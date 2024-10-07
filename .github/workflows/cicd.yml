@@ -3,14 +3,37 @@ name: Node.js Docker CI/CD
 on:
   push:
     branches:
-      - "*" # 모든 브랜치에 대해 Push 이벤트 발생 시 실행
+      - '*' # 모든 브랜치에 대해 Push 이벤트 발생 시 실행
   pull_request:
     branches:
       - main # main으로 PR이 오면 실행
 
 jobs:
+  validate-env:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Validate Environment Variables
+        run: |
+          REQUIRED_ENV_VARS=("HOST" "USERNAME" "PRIVATE_KEY" "DOCKER_ACCESS_TOKEN" "DOCKER_USERNAME" "HOST_PORT" "CONTAINER_PORT")
+          for var in "${REQUIRED_ENV_VARS[@]}"
+          do
+            if [ -z "${!var}" ]; then
+              echo "Error: $var is not set."
+              exit 1
+            fi
+          done
+        env:
+          HOST: ${{ secrets.SERVER_HOST }}
+          USERNAME: ${{ secrets.SERVER_USERNAME }}
+          PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
+          DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
+
   build-and-test:
     runs-on: ubuntu-20.04
+    needs: validate-env
 
     steps:
       - name: Checkout repository
@@ -19,13 +42,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
 
-      # - name: Run tests
-      #   run: npm test
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -43,26 +69,72 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:latest
 
-  deploy:
+  integration-test:
     runs-on: ubuntu-20.04
     needs: build-and-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Create logs directory
+        run: mkdir -p logs
+
+      - name: Run integration test using Docker Compose
+        env:
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
+        run: |
+          docker-compose -f docker-compose.yml up -d
+          sleep 90 # 서버가 시작될 시간을 충분히 주기 위해 대기
+          docker-compose -f docker-compose.yml ps
+          docker-compose -f docker-compose.yml logs --tail=50
+          docker-compose -f docker-compose.yml exec -T web curl -f http://localhost:${CONTAINER_PORT} || exit 1
+
+      - name: Tear down Docker Compose
+        if: always()
+        env:
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
+        run: docker-compose -f docker-compose.yml down
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: integration-test
     if: github.ref == 'refs/heads/main' # main 브랜치일 때만 배포 실행
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
       - name: Deploy to server
         env:
           HOST: ${{ secrets.SERVER_HOST }}
           USERNAME: ${{ secrets.SERVER_USERNAME }}
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
+          DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
+          # Private key file setup for SSH connection
           printf "%s\n" "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
+
+          # Copy Docker Compose file to remote server
           scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/root/app/
+
+          # Connect to server and deploy the service
           ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST '
-            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin &&
+            echo "$DOCKER_ACCESS_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin &&
             docker compose -f /root/app/docker-compose.yml down &&
             docker compose -f /root/app/docker-compose.yml pull &&
             docker compose -f /root/app/docker-compose.yml up -d

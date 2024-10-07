@@ -1,0 +1,27 @@
+# Node modules and log files
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+
+# Git repository files
+.git
+.gitignore
+
+# Docker-related files
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# IDE/editor files
+.vscode
+.idea
+*.swp
+*~
+*.iml
+
+# Test files and coverage
+coverage
+*.test.js
