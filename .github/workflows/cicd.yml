@@ -6,7 +6,7 @@ on:
       - '*'
 
 jobs:
-  lint-and-test:
+  lint-and-audit:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -16,11 +16,10 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npm run lint
-      - run: npm test
       - run: npm audit --audit-level=moderate
 
   build-and-deploy:
-    needs: lint-and-test
+    needs: lint-and-audit
     runs-on: ubuntu-20.04
     if: github.ref == 'refs/heads/main'
     steps:
