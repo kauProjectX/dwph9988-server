@@ -132,8 +132,8 @@ jobs:
           # Copy Docker Compose file to remote server
           scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/root/app/
 
-          # Connect to server and deploy the service
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST '
+          # Connect to server and deploy the service (with -T to disable TTY)
+          ssh -T -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST '
             echo "$DOCKER_ACCESS_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin &&
             docker compose -f /root/app/docker-compose.yml down &&
             docker compose -f /root/app/docker-compose.yml pull &&
