@@ -48,7 +48,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-20.04
-    if: github.ref == 'refs/heads/main' # main 브랜치에 머지될 때만 배포 실행
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -66,17 +66,27 @@ jobs:
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
           DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
+          HOST_PORT: ${{ secrets.HOST_PORT }}
         run: |
           # Private key file setup for SSH connection
           printf "%s\n" "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
 
-          # Copy Docker Compose file to remote server
-          scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml $USERNAME@$HOST:/root/app/
+          # Create a temporary docker-compose.yml with environment variables
+          envsubst < docker-compose.yml > temp-docker-compose.yml
+
+          # Copy temporary Docker Compose file to remote server
+          scp -o StrictHostKeyChecking=no -i private_key.pem temp-docker-compose.yml $USERNAME@$HOST:/root/app/docker-compose.yml
 
           # Connect to server and deploy the service using pulled Docker image
-          ssh -T -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST '
-            echo "$DOCKER_ACCESS_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin &&
-            docker compose -f /root/app/docker-compose.yml pull &&
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $USERNAME@$HOST << EOF
+            export DOCKER_ACCESS_TOKEN="$DOCKER_ACCESS_TOKEN"
+            export DOCKER_USERNAME="$DOCKER_USERNAME"
+            echo "$DOCKER_ACCESS_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker compose -f /root/app/docker-compose.yml pull
             docker compose -f /root/app/docker-compose.yml up -d
-          '
+          EOF
+
+          # Clean up temporary files
+          rm private_key.pem temp-docker-compose.yml
