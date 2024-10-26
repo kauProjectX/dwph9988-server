@@ -2,7 +2,7 @@ const response = ({ isSuccess, message }, result) => {
   return {
     isSuccess: isSuccess,
     message: message,
-    result: result,
+    result: result || null,
   };
 };
 
