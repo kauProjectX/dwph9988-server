@@ -1,13 +1,10 @@
-const winston = require('winston');
-const winstonDaily = require('winston-daily-rotate-file');
-const appRoot = require('app-root-path');
-const fs = require('fs');
-
-const { createLogger } = require('winston');
+import winston from 'winston';
+import winstonDaily from 'winston-daily-rotate-file';
+import appRoot from 'app-root-path';
+import fs from 'fs';
 
 const logDir = `${appRoot}/logs`;
 
-// 로그 디렉토리 생성 확인
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
 }
@@ -18,9 +15,8 @@ const logFormat = printf(({ level, message, label, timestamp }) => {
   return `${timestamp} [${label}] ${level}: ${message}`;
 });
 
-// 로그 설정
-const logger = createLogger({
-  level: 'info', // 기본 로그 레벨 설정
+const logger = winston.createLogger({
+  level: 'info',
   format: combine(label({ label: 'ProjectX' }), timestamp(), logFormat),
   transports: [
     new winstonDaily({
@@ -28,21 +24,18 @@ const logger = createLogger({
       datePattern: 'YYYY-MM-DD',
       dirname: logDir,
       filename: `%DATE%.log`,
-      maxFiles: 30, // 30일 간 로그 파일 유지
+      maxFiles: 30,
       zippedArchive: true,
     }),
     new winston.transports.Console({
-      level: 'debug', // 콘솔 로그 레벨 설정
+      level: 'debug',
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
       ),
     }),
   ],
-  exitOnError: false, // 오류 발생 시 프로세스 종료 방지
+  exitOnError: false,
 });
 
-// logger 사용 예시 (테스트용)
-logger.info('Logger is set up and running!');
-
-module.exports = logger;
+export default logger;
