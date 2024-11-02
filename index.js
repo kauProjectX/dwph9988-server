@@ -1,20 +1,29 @@
-import 'dotenv/config';
 import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import memberRouter from './src/app/domain/member/memberRoute.js';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
+import { errorMiddleware } from './src/app/global/errorHandler.js';
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// Swagger 경로 설정
+app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
+
+// Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// 기본 경로 설정
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
-});
+// Routes
+app.use('/api/members', memberRouter);
 
-// 서버 시작 (0.0.0.0으로 바인딩하여 외부 접근 허용)
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+// Error Handler
+app.use(errorMiddleware);
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
