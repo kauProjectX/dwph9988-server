@@ -5,13 +5,17 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 # Install necessary build tools and curl
-RUN apk add --no-cache python3 make g++ curl
+RUN apk add --no-cache python3 make g++ curl openssl
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
+COPY prisma ./prisma/
 
 # Install app dependencies
 RUN npm ci
+
+# Generate Prisma Client
+RUN npx prisma generate
 
 # Remove unnecessary build tools
 RUN apk del python3 make g++
