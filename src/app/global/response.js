@@ -1,4 +1,4 @@
-const response = ({ isSuccess, message }, result) => {
+export const response = ({ isSuccess, message }, result) => {
   return {
     isSuccess: isSuccess,
     message: message,
@@ -6,11 +6,9 @@ const response = ({ isSuccess, message }, result) => {
   };
 };
 
-const errResponse = ({ isSuccess, message }) => {
+export const errResponse = ({ isSuccess, message }) => {
   return {
     isSuccess: isSuccess,
     message: message,
   };
 };
-
-module.exports = { response, errResponse };

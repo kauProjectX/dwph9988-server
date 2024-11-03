@@ -13,95 +13,103 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model members {
-  members_idx BigInt   @id @default(autoincrement())
-  user_id     String   @unique
-  password    String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+model Members {
+  id              BigInt      @id @default(autoincrement()) @map("members_idx")
+  userId          String      @unique @map("user_id") @db.VarChar(50)
+  password        String      @map("password") @db.VarChar(255)
+  userName        String?     @map("user_name") @db.VarChar(255)
+  phoneNumber     String?     @map("phone_number") @db.VarChar(20)
+  birthday        DateTime?   @db.Date
+  userType        UserType?   @map("user_type")
+  createdAt       DateTime    @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
+  
+  // 관계 설정
+  devices         Devices[]
+  protector       Protect[]   @relation("Protector")
+  protected       Protect[]   @relation("Protected")
+  rewards         Rewards[]
+  heatWaves       HeatWave[]
 
-  // Relations
-  rewards            rewards[]
-  members_info       members_info?
-  protect_as_member  protect[]     @relation("ProtectAsMember")
-  protect_as_member2 protect[]     @relation("ProtectAsMember2")
-  heat_wave          heat_wave[]
-  devices            devices[]
+  @@map("members")
 }
 
-model rewards {
-  rewards_idx  BigInt   @id @default(autoincrement())
-  members_id   BigInt
-  money        BigInt
-  content      String?
-  prefix_money BigInt
-  created_at   DateTime @default(now())
+model Protect {
+  id          BigInt   @id @default(autoincrement()) @map("protect_idx")
+  protector   Members  @relation("Protector", fields: [protectorId], references: [id])
+  protectorId BigInt   @map("members_id")
+  protected   Members  @relation("Protected", fields: [protectedId], references: [id])
+  protectedId BigInt   @map("members_id2")
 
-  // Foreign key
-  members members @relation(fields: [members_id], references: [members_idx])
+  @@map("protect")
 }
 
-model news {
-  quizs_idx BigInt  @id @default(autoincrement())
-  content   String?
-  choice_1  String?
-  choice_2  String?
-  choice_3  String?
-  choice_4  String?
-  answer    Int?
+model Devices {
+  id              BigInt      @id @default(autoincrement()) @map("devices_idx")
+  deviceToken     String?     @map("devices_token") @db.VarChar(255)
+  lastLoggedInAt  DateTime?   @map("last_logged_in_at") @db.Timestamp(0)
+  deviceType      DeviceType? @map("deveices_type")
+  member          Members     @relation(fields: [memberId], references: [id])
+  memberId        BigInt      @map("members_id")
 
-  // Relations
-  news_image news_image[]
+  @@map("devices")
 }
 
-model members_info {
-  members_idx  BigInt    @id
-  name         String    @default("") // Assuming name should not be NULL
-  phone_number String?
-  birthday     DateTime? // Allow NULL as birthday might not be provided
-  user_type    Int? // Assuming user_type is optional
+model Rewards {
+  id          BigInt    @id @default(autoincrement()) @map("rewards_idx")
+  member      Members   @relation(fields: [memberId], references: [id])
+  memberId    BigInt    @map("members_idx")
+  money       BigInt    @map("money")
+  content     String?   @db.Text
+  prefixMoney BigInt    @map("prefix_money")
+  createdAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
 
-  // Foreign key
-  members members @relation(fields: [members_idx], references: [members_idx])
+  @@map("rewards")
 }
 
-model protect {
-  protect_idx BigInt @id @default(autoincrement())
-  members_id  BigInt
-  members_id2 BigInt
+model News {
+  id          BigInt      @id @default(autoincrement()) @map("quizs_idx")
+  content     String?     @db.VarChar(255)
+  choice1     String?     @map("choice_1") @db.VarChar(255)
+  choice2     String?     @map("choice_2") @db.VarChar(255)
+  choice3     String?     @map("choice_3") @db.VarChar(255)
+  choice4     String?     @map("choice_4") @db.VarChar(255)
+  answer      Int?
+  newsImages  NewsImage[]
 
-  // Foreign keys
-  member1 members @relation("ProtectAsMember", fields: [members_id], references: [members_idx])
-  member2 members @relation("ProtectAsMember2", fields: [members_id2], references: [members_idx])
+  @@map("news")
 }
 
-model heat_wave {
-  heat_wave_idx    BigInt @id @default(autoincrement())
-  members_id       BigInt
-  location         String @default("") // Assuming location should not be NULL
-  temperature      Int? // Temperature fields are kept optional
-  feel_temperature Int?
-  max_temperature  Int?
+model NewsImage {
+  imageId     String    @map("image_idx") @db.VarChar(255)
+  news        News      @relation(fields: [newsId], references: [id])
+  newsId      BigInt    @map("quizs_idx")
+  imageUrl    String?   @map("image_url") @db.VarChar(255)
 
-  // Foreign key
-  members members @relation(fields: [members_id], references: [members_idx])
+  @@id([imageId, newsId])
+  @@map("news_image")
 }
 
-model news_image {
-  image_idx String  @id
-  quizs_idx BigInt
-  image_url String? // Image URL might be optional
+model HeatWave {
+  id                BigInt    @id @default(autoincrement()) @map("heat_wave_idx")
+  member           Members   @relation(fields: [memberId], references: [id])
+  memberId         BigInt    @map("members_idx")
+  location         String?   @db.VarChar(255)
+  temperature      Int?
+  feelTemperature  Int?      @map("feel_temperature")
+  maxTemperature   Int?      @map("max_temperature")
 
-  // Foreign key
-  news news @relation(fields: [quizs_idx], references: [quizs_idx])
+  @@map("heat_wave")
 }
 
-model devices {
-  devices_idx       BigInt   @id @default(autoincrement())
-  devices_token     String? // Assuming devices_token can be NULL
-  last_logged_in_at DateTime @default(now()) // Automatically set to the current timestamp
-  members_id        BigInt
+enum UserType {
+  GUARDIAN
+  ELDERLY
+  USER
+  ADMIN
+}
 
-  // Foreign key
-  members members @relation(fields: [members_id], references: [members_idx])
+enum DeviceType {
+  ANDROID
+  IOS
 }

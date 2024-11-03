@@ -1,6 +1,6 @@
 // src/app/global/errorHandler.js
-const logger = require('./logger');
-const { errResponse } = require('./response');
+import logger from './logger.js';
+import { errResponse } from './response.js';
 
 class CustomError extends Error {
   constructor(message, status) {
@@ -99,7 +99,7 @@ const errorMiddleware = (err, req, res, next) => {
   );
 };
 
-module.exports = {
+export {
   CustomError,
   BadRequestError,
   UnauthorizedError,
