@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import memberRouter from './src/app/domain/member/memberRoute.js';
+import heatRouter from './src/app/domain/heat/heatRoute.js';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 import { errorMiddleware } from './src/app/global/errorHandler.js';
 
@@ -20,6 +21,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 app.use('/api/members', memberRouter);
+app.use('/api/heat', heatRouter);
 
 // Error Handler
 app.use(errorMiddleware);
