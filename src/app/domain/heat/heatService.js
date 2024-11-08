@@ -8,12 +8,62 @@ const KMA_SERVICE_KEY = process.env.KMA_SERVICE_KEY;
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-// 좌표를 주소로 변환하는 함수 (네이버 지도 API 사용)
+// 좌표 변환 함수 추가
+const gridToWGS84 = (nx, ny) => {
+  const RE = 6371.00877; // 지구 반경(km)
+  const GRID = 5.0; // 격자 간격(km)
+  const SLAT1 = 30.0; // 표준 위도1(도)
+  const SLAT2 = 60.0; // 표준 위도2(도)
+  const OLON = 126.0; // 기준점 경도(도)
+  const OLAT = 38.0; // 기준점 위도(도)
+  const XO = 43; // 기준점 X좌표(GRID)
+  const YO = 136; // 기준점 Y좌표(GRID)
+
+  const DEGRAD = Math.PI / 180.0;
+  const RADDEG = 180.0 / Math.PI;
+
+  const re = RE / GRID;
+  const slat1 = SLAT1 * DEGRAD;
+  const slat2 = SLAT2 * DEGRAD;
+  const olon = OLON * DEGRAD;
+  const olat = OLAT * DEGRAD;
+
+  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
+  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sf = (Math.pow(sf, sn) * Math.cos(slat1)) / sn;
+  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+  ro = (re * sf) / Math.pow(ro, sn);
+
+  const rs = {};
+  rs.x = nx;
+  rs.y = ny;
+  let xn = rs.x - XO;
+  let yn = ro - rs.y + YO;
+  let ra = Math.sqrt(xn * xn + yn * yn);
+  if (sn < 0.0) {
+    ra = -ra;
+  }
+  let alat = Math.pow((re * sf) / ra, 1.0 / sn);
+  alat = 2.0 * Math.atan(alat) - Math.PI * 0.5;
+
+  let theta = Math.atan2(xn, yn);
+  let alon = theta / sn + olon;
+  return {
+    latitude: alat * RADDEG,
+    longitude: alon * RADDEG,
+  };
+};
+
+// 수정된 getAddressFromCoordinates 함수
 const getAddressFromCoordinates = async (nx, ny) => {
   try {
+    // nx, ny를 위도(latitude), 경도(longitude)로 변환
+    const { latitude, longitude } = gridToWGS84(nx, ny);
+
     const response = await axios.get('https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc', {
       params: {
-        coords: `${ny},${nx}`, // '경도,위도' 형식 (ny가 경도, nx가 위도)
+        coords: `${longitude},${latitude}`, // '경도,위도' 형식
         orders: 'roadaddr,addr', // 도로명 주소와 지번 주소를 포함하여 요청
         output: 'json',
       },
@@ -22,7 +72,7 @@ const getAddressFromCoordinates = async (nx, ny) => {
         'X-NCP-APIGW-API-KEY': NAVER_CLIENT_SECRET,
       },
     });
-    console.log('Reverse Geocoding Response:', response.data);
+
     // 응답 데이터에서 주소 정보 추출
     const results = response.data.results;
     if (results && results.length > 0) {
