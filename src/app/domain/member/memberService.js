@@ -1,161 +1,165 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { ConflictError, UnauthorizedError } from '../../global/errorHandler.js';
+import { AUTH_CONFIG } from '../auth/config/authConfig.js';
 import { MemberRepository } from './memberRepository.js';
-import { AUTH_CONFIG } from '../../../config/authConfig.js';
-import {
-  DuplicateEmailError,
-  InvalidCredentialsError,
-  InvalidPasswordError,
-  InvalidPhoneNumberError,
-  InvalidBirthdayError,
-} from './memberError.js';
+import { NotFoundError, BadRequestError } from '../../global/errorHandler.js';
+import axios from 'axios';
 
 export class MemberService {
   constructor() {
     this.memberRepository = new MemberRepository();
   }
 
-  async signup(signupData) {
-    const { userId, password, userType, ...rest } = signupData;
+  async kakaoLogin(kakaoData) {
+    const { kakaoId, email, nickname } = kakaoData;
 
-    const existingUser = await this.memberRepository.findByUserId(userId);
-    if (existingUser) {
-      throw new DuplicateEmailError();
-    }
+    let user = await this.memberRepository.findByKakaoId(kakaoId);
 
-    if (
-      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(
-        password
-      )
-    ) {
-      throw new InvalidPasswordError();
-    }
-
-    const userTypeEnum = userType === 1 ? 'GUARDIAN' : 'ELDERLY';
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await this.memberRepository.create({
-      userId,
-      password: hashedPassword,
-      userType: userTypeEnum,
-      ...rest,
-    });
-
-    const accessToken = this.generateAccessToken(user.id);
-    const refreshToken = this.generateRefreshToken(user.id);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        ...user,
-        id: Number(user.id),
-        userType: user.userType === 'GUARDIAN' ? 1 : 2,
-      },
-    };
-  }
-
-  async login(loginData) {
-    const { userId, password } = loginData;
-    const user = await this.memberRepository.findByUserId(userId);
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new InvalidCredentialsError();
+    if (!user) {
+      user = await this.memberRepository.create({
+        kakaoId,
+        userName: nickname,
+        userType: 'GUARDIAN',
+        email: email || null,
+      });
     }
 
     const accessToken = this.generateAccessToken(user.id);
-    const refreshToken = this.generateRefreshToken(user.id);
 
     return {
       accessToken,
-      refreshToken,
       user: {
         id: Number(user.id),
-        userId: user.userId,
         userName: user.userName,
-        userType: user.userType === 'GUARDIAN' ? 1 : 2,
+        userType: user.userType,
       },
     };
-  }
-
-  async refreshToken(refreshToken) {
-    try {
-      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-      const user = await this.memberRepository.findById(BigInt(decoded.userId));
-
-      if (!user) {
-        throw new UnauthorizedError('존재하지 않는 사용자입니다.');
-      }
-
-      const accessToken = this.generateAccessToken(user.id);
-
-      return {
-        accessToken,
-        user: {
-          ...user,
-          id: Number(user.id),
-          userType: user.userType === 'GUARDIAN' ? 1 : 2,
-        },
-      };
-    } catch (error) {
-      throw new UnauthorizedError('유효하지 않은 리프레시 토큰입니다.');
-    }
   }
 
   generateAccessToken(userId) {
-    return jwt.sign(
-      { userId: userId.toString() },
-      AUTH_CONFIG.jwt.access.secret,
-      { expiresIn: AUTH_CONFIG.jwt.access.expiresIn }
-    );
-  }
-
-  generateRefreshToken(userId) {
-    return jwt.sign(
-      { userId: userId.toString() },
-      AUTH_CONFIG.jwt.refresh.secret,
-      { expiresIn: AUTH_CONFIG.jwt.refresh.expiresIn }
-    );
-  }
-
-  async updateProfile(userId, updateData) {
-    const { phoneNumber, birthday } = updateData;
-
-    if (phoneNumber && !/^[0-9]{10,11}$/.test(phoneNumber)) {
-      throw new InvalidPhoneNumberError();
+    if (!AUTH_CONFIG.jwt.secret) {
+      throw new Error('JWT secret is not configured');
     }
 
-    if (birthday) {
-      const date = new Date(birthday);
-      if (isNaN(date.getTime())) {
-        throw new InvalidBirthdayError();
-      }
-    }
+    return jwt.sign({ userId: userId.toString() }, AUTH_CONFIG.jwt.secret, {
+      expiresIn: AUTH_CONFIG.jwt.expiresIn,
+    });
+  }
 
-    const updatedUser = await this.memberRepository.update(userId, updateData);
+  async getProfile(userId) {
+    const user = await this.memberRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('사용자를 찾을 수 없습니다.');
+    }
+    return user;
+  }
+
+  async requestConnection(guardianId, phoneNumber) {
+    const verificationCode = Math.random().toString().slice(2, 8);
+
+    const protect = await this.memberRepository.createProtect({
+      guardianId,
+      phoneNumber,
+      verificationCode,
+      status: 'PENDING',
+      requestType: 'DIRECT',
+      codeExpiredAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    console.log('========= 인증번호 발송 시뮬레이션 =========');
+    console.log('수신번호:', phoneNumber);
+    console.log('인증번호:', verificationCode);
+    console.log('====================================');
+
     return {
-      id: Number(updatedUser.id),
-      userId: updatedUser.userId,
-      userName: updatedUser.userName,
-      phoneNumber: updatedUser.phoneNumber,
-      birthday: updatedUser.birthday.toISOString().split('T')[0],
-      userType: updatedUser.userType === 'GUARDIAN' ? 1 : 2,
+      protectId: protect.id,
+      verificationCode,
+      expiresIn: '30분',
     };
   }
 
-  async updatePassword(userId, { currentPassword, newPassword }) {
-    const user = await this.memberRepository.findById(userId);
+  async verifyConnection(guardianId, protectId, verificationCode) {
+    const protect = await this.memberRepository.findProtectById(protectId);
 
-    if (!(await bcrypt.compare(currentPassword, user.password))) {
-      throw new UnauthorizedError('현재 비밀번호가 일치하지 않습니다.');
+    if (!protect || protect.guardianId !== guardianId) {
+      throw new BadRequestError('유효하지 않은 요청입니다.');
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.memberRepository.update(userId, { password: hashedPassword });
+    if (protect.status !== 'PENDING') {
+      throw new BadRequestError('이미 처리된 요청입니다.');
+    }
+
+    if (protect.codeExpiredAt < new Date()) {
+      throw new BadRequestError('인증번호가 만료되었습니다.');
+    }
+
+    if (protect.verificationCode !== verificationCode) {
+      throw new BadRequestError('인증번호가 일치하지 않습니다.');
+    }
+
+    await this.memberRepository.updateProtect(protectId, {
+      status: 'ACTIVE',
+      verifiedAt: new Date(),
+    });
+
+    return true;
   }
 
-  async deleteAccount(userId) {
-    await this.memberRepository.delete(userId);
+  async logout(userId, accessToken) {
+    const user = await this.memberRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('사용자를 찾을 수 없습니다.');
+    }
+
+    // 카카오 로그아웃
+    try {
+      await axios.post(
+        'https://kapi.kakao.com/v1/user/logout',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        'Kakao logout error:',
+        error.response?.data || error.message
+      );
+      // 카카오 로그아웃 실패해도 계속 진행
+    }
+
+    // 클라이언트에서 토큰을 삭제하도록 안내
+    return true;
+  }
+
+  async withdraw(userId, accessToken) {
+    const user = await this.memberRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('사용자를 찾을 수 없습니다.');
+    }
+
+    try {
+      // 1. 카카오 연동 해제 (Admin Key 사용)
+      await axios.post(
+        'https://kapi.kakao.com/v1/user/unlink',
+        {
+          target_id_type: 'user_id',
+          target_id: user.kakaoId,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`,
+          },
+        }
+      );
+
+      // 2. DB에서 사용자 삭제
+      await this.memberRepository.deleteById(userId);
+    } catch (error) {
+      console.error('Kakao API Error:', error.response?.data || error.message);
+      throw new Error('회원 탈퇴 처리 중 오류가 발생했습니다.');
+    }
   }
 }

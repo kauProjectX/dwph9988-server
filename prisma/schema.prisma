@@ -14,32 +14,40 @@ datasource db {
 }
 
 model Members {
-  id              BigInt      @id @default(autoincrement()) @map("members_idx")
-  userId          String      @unique @map("user_id") @db.VarChar(50)
-  password        String      @map("password") @db.VarChar(255)
-  userName        String?     @map("user_name") @db.VarChar(255)
-  phoneNumber     String?     @map("phone_number") @db.VarChar(20)
-  birthday        DateTime?   @db.Date
-  userType        UserType?   @map("user_type")
-  createdAt       DateTime    @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
-  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
-  
-  // 관계 설정
-  devices         Devices[]
-  protector       Protect[]   @relation("Protector")
-  protected       Protect[]   @relation("Protected")
-  rewards         Rewards[]
-  heatWaves       HeatWave[]
+  id          BigInt    @id @default(autoincrement())
+  kakaoId     String    @unique // 카카오 고유 ID (필수)
+  email       String?   // 카카오 이메일 (선택적)
+  userName    String    // 카카오 닉네임
+  userType    UserType  @default(GUARDIAN)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 관계 정의
+  protectingUsers Protect[] @relation("GuardianToProtect") // 내가 보호하는 사용자들
+  protectedByUsers Protect[] @relation("ElderlyToProtect") // 나를 보호하는 사용자들
+  devices         Devices[]  // 사용자의 디바이스 정보
+  rewards         Rewards[]  // 사용자의 리워드 정보
+  heatWaves       HeatWave[] // 사용자의 폭염 정보
 
   @@map("members")
 }
 
 model Protect {
-  id          BigInt   @id @default(autoincrement()) @map("protect_idx")
-  protector   Members  @relation("Protector", fields: [protectorId], references: [id])
-  protectorId BigInt   @map("members_id")
-  protected   Members  @relation("Protected", fields: [protectedId], references: [id])
-  protectedId BigInt   @map("members_id2")
+  id              BigInt      @id @default(autoincrement())
+  guardianId      BigInt      // 보호자 ID
+  elderlyId       BigInt      // 어르신 ID
+  status          String      // PENDING, ACTIVE, REJECTED, INACTIVE
+  requestType     String      // SMS, KAKAO
+  verificationCode String?    // 인증번호
+  codeExpiredAt   DateTime?   // 인증번호 만료시간
+  verifiedAt      DateTime?   // 인증 완료 시간
+  rejectedAt      DateTime?   // 거절 시간
+  rejectedReason  String?     // 거절 사유
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  guardian        Members     @relation("GuardianToProtect", fields: [guardianId], references: [id])
+  elderly         Members     @relation("ElderlyToProtect", fields: [elderlyId], references: [id])
 
   @@map("protect")
 }
@@ -103,10 +111,8 @@ model HeatWave {
 }
 
 enum UserType {
-  GUARDIAN
-  ELDERLY
-  USER
-  ADMIN
+  GUARDIAN // 보호자
+  ELDERLY  // 어르신
 }
 
 enum DeviceType {

@@ -1,12 +1,19 @@
-import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+
+// 환경 변수 설정
+const environment =
+  process.env.NODE_ENV === 'production' ? 'production' : 'development';
+dotenv.config({
+  path: path.resolve(process.cwd(), `.env.${environment}`),
+});
+
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import memberRouter from './src/app/domain/member/memberRoute.js';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 import { errorMiddleware } from './src/app/global/errorHandler.js';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;

@@ -1,13 +1,26 @@
 import express from 'express';
+import { KakaoAuthController } from '../auth/controller/kakaoAuthController.js';
 import { MemberController } from './memberController.js';
-import { authMiddleware } from '../../global/authMiddleware.js';
+import { authMiddleware } from '../auth/middleware/authMiddleware.js';
 
 const router = express.Router();
-const controller = new MemberController();
+const kakaoController = new KakaoAuthController();
+const memberController = new MemberController();
 
-router.post('/signup', controller.signup);
-router.post('/login', controller.login);
-router.put('/profile', authMiddleware, controller.updateProfile);
-router.post('/refresh', controller.refreshToken);
+router.get('/social/kakao', kakaoController.kakaoLogin);
+router.get('/social/kakao/callback', kakaoController.kakaoCallback);
+router.get('/profile', authMiddleware, memberController.getProfile);
+router.post(
+  '/connect/request',
+  authMiddleware,
+  memberController.requestConnection
+);
+router.post(
+  '/connect/verify',
+  authMiddleware,
+  memberController.verifyConnection
+);
+router.post('/logout', authMiddleware, memberController.logout);
+router.delete('/withdraw', authMiddleware, memberController.withdraw);
 
 export default router;
