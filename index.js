@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// 환경 변수 설정
 const environment =
   process.env.NODE_ENV === 'production' ? 'production' : 'development';
 dotenv.config({
@@ -18,9 +17,27 @@ import { errorMiddleware } from './src/app/global/errorHandler.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS 설정
+const corsOptions = {
+  origin: [
+    process.env.SERVICE_URL,
+    'http://localhost:3000',
+    'https://dwph9988.shop',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
+// preflight 요청을 위한 OPTIONS 처리
+app.options('*', cors(corsOptions));
 
 // Root path handler for basic check
 app.get('/', (req, res) => {

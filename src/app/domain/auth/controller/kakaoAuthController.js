@@ -68,7 +68,7 @@ export class KakaoAuthController {
       const { accessToken, user } =
         await this.memberService.kakaoLogin(kakaoData);
 
-      // JSON 응답으로 변경
+      // 응답을 더 간단하게
       res.json(
         response(
           {
@@ -78,7 +78,6 @@ export class KakaoAuthController {
           {
             accessToken,
             user,
-            swagger_url: `/api-docs?token=${accessToken}`, // Swagger UI URL 포함
           }
         )
       );
