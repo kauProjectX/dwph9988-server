@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from './errorHandler.js';
-import { MemberRepository } from '../domain/member/memberRepository.js';
+import { UnauthorizedError } from '../../../global/errorHandler.js';
+import { MemberRepository } from '../../member/memberRepository.js';
 
 const memberRepository = new MemberRepository();
 
@@ -16,7 +16,6 @@ export const authMiddleware = async (req, res, next) => {
       : authHeader;
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Decoded Token:', decoded);
 
     const user = await memberRepository.findById(BigInt(decoded.userId));
     if (!user) {
@@ -26,7 +25,6 @@ export const authMiddleware = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    console.error('Auth Error:', error);
     if (error instanceof jwt.JsonWebTokenError) {
       next(new UnauthorizedError('유효하지 않은 인증 토큰입니다.'));
     } else {
