@@ -10,12 +10,16 @@ export class MemberController {
   getProfile = async (req, res, next) => {
     try {
       const user = await this.memberService.getProfile(req.user.id);
-      res.json(
-        response(
-          { isSuccess: true, message: '프로필 조회가 완료되었습니다.' },
-          user
-        )
-      );
+
+      // 명시적인 상태 코드 설정
+      res
+        .status(200)
+        .json(
+          response(
+            { isSuccess: true, message: '프로필 조회가 완료되었습니다.' },
+            user
+          )
+        );
     } catch (err) {
       next(err);
     }

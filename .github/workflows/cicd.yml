@@ -43,6 +43,7 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/my-node-app:buildcache,mode=max
       - name: Deploy to NCP
         env:
+          NODE_ENV: production
           HOST: ${{ secrets.SERVER_HOST }}
           USERNAME: ${{ secrets.SERVER_USERNAME }}
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}

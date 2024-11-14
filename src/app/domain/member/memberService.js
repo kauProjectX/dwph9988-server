@@ -36,17 +36,22 @@ export class MemberService {
   }
 
   generateAccessToken(userId) {
-    if (!AUTH_CONFIG.jwt.secret) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET:', process.env.JWT_SECRET);
       throw new Error('JWT secret is not configured');
     }
 
-    return jwt.sign({ userId: userId.toString() }, AUTH_CONFIG.jwt.secret, {
-      expiresIn: AUTH_CONFIG.jwt.expiresIn,
+    return jwt.sign({ userId: userId.toString() }, secret, {
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '24h',
     });
   }
 
   async getProfile(userId) {
+    console.log('Fetching profile for userId:', userId);
     const user = await this.memberRepository.findById(userId);
+    console.log('Found user:', user);
+
     if (!user) {
       throw new NotFoundError('사용자를 찾을 수 없습니다.');
     }

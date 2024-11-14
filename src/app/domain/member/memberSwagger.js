@@ -43,26 +43,16 @@
  *     summary: 카카오 로그인/회원가입
  *     description: |
  *       # 카카오 로그인 방법
- *       ## 모바일 앱 사용자
- *       1. 앱에서 카카오 로그인 버튼 클릭
- *       2. 카카오 로그인 및 권한 동의
- *       3. 로그인 완료 후 JWT 토큰 발급
  *
  *       ## 웹 브라우저 사용자
- *       1. ${SERVICE_URL}/api/members/social/kakao 접속
- *       2. 카카오 로그인 및 권한 동의
- *       3. 로그인 완료 후 JWT 토큰 발급
+ *       ### 개발 환경
+ *       - http://localhost:3000/api/members/social/kakao
  *
- *       ## 개발자 테스트용
- *       1. 카카오 개발자 콘솔에서 테스트용 access_token 발급
- *       2. 발급받은 토큰으로 API 테스트
- *     parameters:
- *       - in: query
- *         name: access_token
- *         required: false
- *         schema:
- *           type: string
- *         description: (개발자 테스트용) 카카오 개발자 콘솔에서 발급받은 액세스 토큰
+ *       ### 운영 환경
+ *       - https://dwph9988.shop/api/members/social/kakao
+ *
+ *       현재 서버: ${process.env.NODE_ENV === 'production' ? '운영' : '개발'}
+ *       접속 URL: ${process.env.SERVICE_URL}/api/members/social/kakao
  *     responses:
  *       200:
  *         description: 로그인 성공
@@ -79,6 +69,36 @@
  *     responses:
  *       200:
  *         description: 프로필 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "프로필 조회가 완료되었습니다."
+ *                 result:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     userName:
+ *                       type: string
+ *                       example: "박준규"
+ *                     userType:
+ *                       type: string
+ *                       example: "GUARDIAN"
+ *                     kakaoId:
+ *                       type: string
+ *                       example: "12345678"
+ *                     email:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "example@kakao.com"
  *
  * /api/members/connect/request:
  *   post:
