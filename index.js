@@ -11,6 +11,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import memberRouter from './src/app/domain/member/memberRoute.js';
+import shelterRouter from './src/app/domain/shelter/shelterRoute.js';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 import { errorMiddleware } from './src/app/global/errorHandler.js';
 
@@ -64,6 +65,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 app.use('/api/members', memberRouter);
+app.use('/api/shelters', shelterRouter);
 
 // 404 handler
 app.use((req, res) => {
