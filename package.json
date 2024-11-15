@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "start": "node index.js",
-    "dev": "nodemon index.js --watch .",
+    "start": "NODE_ENV=production node index.js",
+    "dev": "NODE_ENV=development node index.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

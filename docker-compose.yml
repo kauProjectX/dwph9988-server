@@ -3,20 +3,29 @@ services:
   web:
     image: parkjungyu26/my-node-app:latest
     ports:
-      - '${HOST_PORT}:${CONTAINER_PORT}' # GitHub Actions에서 전달된 환경 변수를 사용하여 포트 매핑
+      - '${HOST_PORT}:${CONTAINER_PORT}'
     restart: always
     environment:
-      - PORT=${CONTAINER_PORT} # 환경 변수 PORT 설정
+      - NODE_ENV=production
+      - PORT=${CONTAINER_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRES_IN=${JWT_ACCESS_EXPIRES_IN}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+      - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
+      - KAKAO_ADMIN_KEY=${KAKAO_ADMIN_KEY}
+      - SERVICE_URL=${SERVICE_URL}
     healthcheck:
-      test:
-        ['CMD-SHELL', 'curl -f http://localhost:${CONTAINER_PORT} || exit 1']
+      test: ['CMD', 'curl', '-f', 'http://localhost:${CONTAINER_PORT}/health']
       interval: 1m30s
       timeout: 10s
       retries: 5
+      start_period: 30s
     logging:
       driver: 'json-file'
       options:
         max-size: '10m'
         max-file: '3'
     volumes:
-      - ./logs:/usr/src/app/logs # 호스트의 logs 폴더를 컨테이너와 공유
+      - ./logs:/usr/src/app/logs

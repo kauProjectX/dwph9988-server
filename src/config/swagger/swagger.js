@@ -1,26 +1,62 @@
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
+// 현재 환경의 서버 URL을 동적으로 결정하는 함수
+const getServerUrl = () => {
+  // SERVICE_URL이 있으면 그것을 사용
+  if (process.env.SERVICE_URL) {
+    return process.env.SERVICE_URL;
+  }
+  // 없으면 개발 환경으로 간주
+  return 'http://localhost:3000';
+};
+
 // Swagger 설정 옵션
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: '3.0.0', // Swagger 버전
+const options = {
+  definition: {
+    openapi: '3.0.0',
     info: {
-      title: 'ProjectX',
+      title: 'ProjectX API',
       version: '1.0.0',
-      description: 'API documentation for ProjectX',
+      description: `더위피해9988 ${process.env.NODE_ENV === 'production' ? '운영' : '개발'} 서버 API 문서`,
+    },
+    externalDocs: {
+      description: 'swagger.json',
+      url: '/swagger.json',
     },
     servers: [
       {
-        url: 'http://localhost:3000', // 서버 URL
+        url: getServerUrl(),
+        description: `${process.env.NODE_ENV === 'production' ? '운영' : '개발'} 서버`,
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: '카카오 로그인 후 받은 JWT 토큰을 입력하세요',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
-  apis: ['./src/app/domain/**/*.js'], // API 파일 경로
+  apis: ['./src/app/domain/**/*.js'],
 };
 
-// Swagger Docs
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
+const swaggerDocs = swaggerJsDoc(options);
 
-// ESM 방식으로 내보내기
-export { swaggerUi, swaggerDocs };
+const setupSwagger = (app) => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+  app.get('/swagger.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerDocs);
+  });
+};
+
+export { swaggerUi, swaggerDocs, setupSwagger };

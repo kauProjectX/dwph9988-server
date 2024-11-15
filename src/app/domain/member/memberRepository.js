@@ -4,54 +4,86 @@ const prisma = new PrismaClient();
 
 export class MemberRepository {
   async findById(id) {
-    return prisma.members.findUnique({
+    const user = await prisma.members.findUnique({
       where: { id: BigInt(id) },
       select: {
         id: true,
-        userId: true,
         userName: true,
         userType: true,
-        password: true,
+        kakaoId: true,
+        email: true,
       },
     });
-  }
 
-  async findByUserId(userId) {
-    return prisma.members.findUnique({
-      where: { userId },
-    });
+    if (user) {
+      return {
+        ...user,
+        id: Number(user.id),
+      };
+    }
+    return null;
   }
 
   async create(data) {
     return prisma.members.create({
-      data,
+      data: {
+        kakaoId: data.kakaoId,
+        email: data.email || null,
+        userName: data.userName,
+        userType: data.userType,
+      },
       select: {
         id: true,
-        userId: true,
         userName: true,
         userType: true,
+        kakaoId: true,
+        email: true,
       },
     });
   }
 
-  async update(id, data) {
-    return prisma.members.update({
+  async findByKakaoId(kakaoId) {
+    return prisma.members.findFirst({
+      where: { kakaoId },
+      select: {
+        id: true,
+        userName: true,
+        userType: true,
+        kakaoId: true,
+        email: true,
+      },
+    });
+  }
+
+  async createProtect(data) {
+    return prisma.protect.create({
+      data: {
+        guardianId: BigInt(data.guardianId),
+        elderlyId: BigInt(data.elderlyId),
+        status: data.status,
+        requestType: data.requestType,
+        verificationCode: data.verificationCode,
+        codeExpiredAt: data.codeExpiredAt,
+      },
+    });
+  }
+
+  async findProtectById(id) {
+    return prisma.protect.findUnique({
+      where: { id: BigInt(id) },
+    });
+  }
+
+  async updateProtect(id, data) {
+    return prisma.protect.update({
       where: { id: BigInt(id) },
       data,
-      select: {
-        id: true,
-        userId: true,
-        userName: true,
-        phoneNumber: true,
-        birthday: true,
-        userType: true,
-      },
     });
   }
 
-  async delete(id) {
+  async deleteById(id) {
     return prisma.members.delete({
-      where: { id },
+      where: { id: BigInt(id) },
     });
   }
 }

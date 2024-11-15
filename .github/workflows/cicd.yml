@@ -43,12 +43,21 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/my-node-app:buildcache,mode=max
       - name: Deploy to NCP
         env:
+          NODE_ENV: production
           HOST: ${{ secrets.SERVER_HOST }}
           USERNAME: ${{ secrets.SERVER_USERNAME }}
           PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           CONTAINER_PORT: ${{ secrets.CONTAINER_PORT }}
           HOST_PORT: ${{ secrets.HOST_PORT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_EXPIRES_IN: ${{ secrets.JWT_ACCESS_EXPIRES_IN }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+          KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
+          SERVICE_URL: ${{ secrets.SERVICE_URL }}
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem

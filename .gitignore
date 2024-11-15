@@ -4,8 +4,9 @@ package-lock.json
 yarn.lock
 
 # Environment variables
-.env
-.env.*
+# .env
+.env.development
+.env.production
 
 # Logs
 logs
