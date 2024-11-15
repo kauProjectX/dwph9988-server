@@ -21,8 +21,8 @@ const options = {
       description: `더위피해9988 ${process.env.NODE_ENV === 'production' ? '운영' : '개발'} 서버 API 문서`,
     },
     externalDocs: {
-      description: "swagger.json",
-      url: "/swagger.json"
+      description: 'swagger.json',
+      url: '/swagger.json',
     },
     servers: [
       {
