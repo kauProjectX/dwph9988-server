@@ -127,3 +127,21 @@ export const getWeatherData = async (nx, ny) => {
     throw new Error('날씨 정보를 가져오는 중 오류가 발생했습니다: ' + error.message);
   }
 };
+
+export const getNaverMapNavigation = (lat, lot, name) => {
+  try {
+    // 네이버 지도 도보 길찾기 URL 생성
+    // URL 인코딩을 하지 않고 한글 그대로 사용
+    const naverMapUrl = `nmap://route/walk?dlat=${lat}&dlng=${lot}&dname=${name}&appname=dwph9988`;
+    
+    // 웹 URL의 경우에만 인코딩 적용
+    const webUrl = `https://map.naver.com/v5/directions/-/-/-/walk?c=${lot},${lat},15,0,0,0,dh&destination=${name}`;
+
+    return {
+      mobileAppLink: naverMapUrl,
+      webBrowserLink: webUrl
+    };
+  } catch (error) {
+    throw new Error('네이버 지도 링크 생성 중 오류가 발생했습니다: ' + error.message);
+  }
+};

@@ -1,9 +1,10 @@
 import express from 'express';
-import { getHeatInfo } from './heatController.js';
+import { getHeatInfo, getNavigationLink } from './heatController.js';
 
 const router = express.Router();
-// const controller = new HeatController();
 
 router.get('/weather', getHeatInfo);
+
+router.get('/navigation', getNavigationLink);
 
 export default router;
