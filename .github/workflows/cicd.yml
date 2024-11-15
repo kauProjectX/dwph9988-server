@@ -58,6 +58,9 @@ jobs:
           KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
           KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
           SERVICE_URL: ${{ secrets.SERVICE_URL }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          COOLING_SHELTER_API_KEY: ${{secrets.COOLING_SHELTER_API_KEY}}
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem

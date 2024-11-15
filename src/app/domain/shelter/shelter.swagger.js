@@ -12,15 +12,9 @@
  *     Shelter:
  *       type: object
  *       properties:
- *         id:
+ *         name:
  *           type: string
- *           description: 쉼터 고유 ID
- *         facilityName:
- *           type: string
- *           description: 시설명
- *         address:
- *           type: string
- *           description: 주소
+ *           description: 무더위쉼터 이름
  *         latitude:
  *           type: number
  *           format: float
@@ -29,42 +23,32 @@
  *           type: number
  *           format: float
  *           description: 경도
- *         phoneNumber:
- *           type: string
- *           description: 연락처
- *         operatingTime:
- *           type: string
- *           description: 운영시간
- *         facilityType:
- *           type: string
- *           description: 시설유형
  */
 
 /**
  * @swagger
  * /api/shelters:
  *   get:
- *     summary: 무더위쉼터 목록 조회
+ *     summary: GPS 위치 기준으로 무더위쉼터 조회
  *     tags: [Shelters]
  *     parameters:
  *       - in: query
  *         name: latitude
+ *         required: true
  *         schema:
  *           type: number
- *         description: 현재 위치 위도
+ *         description: GPS 위도
+ *         example: 37.5666805
  *       - in: query
  *         name: longitude
+ *         required: true
  *         schema:
  *           type: number
- *         description: 현재 위치 경도
- *       - in: query
- *         name: radius
- *         schema:
- *           type: number
- *         description: 검색 반경(km)
+ *         description: GPS 경도
+ *         example: 126.9784147
  *     responses:
  *       200:
- *         description: 무더위쉼터 목록 조회 성공
+ *         description: 가장 가까운 무더위쉼터 조회 성공
  *         content:
  *           application/json:
  *             schema:
@@ -72,32 +56,15 @@
  *               properties:
  *                 status:
  *                   type: string
+ *                   example: success
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Shelter'
  *       400:
- *         description: 잘못된 요청
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 message:
- *                   type: string
+ *         description: GPS 위치 정보 누락
  *       500:
  *         description: 서버 에러
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 message:
- *                   type: string
  */
 
 export {};
