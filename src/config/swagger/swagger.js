@@ -20,6 +20,10 @@ const options = {
       version: '1.0.0',
       description: `더위피해9988 ${process.env.NODE_ENV === 'production' ? '운영' : '개발'} 서버 API 문서`,
     },
+    externalDocs: {
+      description: 'swagger.json',
+      url: '/swagger.json',
+    },
     servers: [
       {
         url: getServerUrl(),
@@ -47,4 +51,12 @@ const options = {
 
 const swaggerDocs = swaggerJsDoc(options);
 
-export { swaggerUi, swaggerDocs };
+const setupSwagger = (app) => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+  app.get('/swagger.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerDocs);
+  });
+};
+
+export { swaggerUi, swaggerDocs, setupSwagger };
