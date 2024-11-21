@@ -70,7 +70,8 @@ app.get('/swagger.json', (req, res) => {
 
 // Routes
 app.use('/api/members', memberRouter);
-
+app.use('/api/heat', heatRouter);
+app.use('/api/shelters', shelterRouter);
 // Error Handler
 app.use(errorMiddleware);
 
