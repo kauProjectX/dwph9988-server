@@ -72,6 +72,16 @@ app.get('/swagger.json', (req, res) => {
 app.use('/api/members', memberRouter);
 app.use('/api/heat', heatRouter);
 app.use('/api/shelters', shelterRouter);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Not Found',
+    path: req.originalUrl,
+  });
+});
+
 // Error Handler
 app.use(errorMiddleware);
 
