@@ -12,6 +12,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import memberRouter from './src/app/domain/member/memberRoute.js';
 import shelterRouter from './src/app/domain/shelter/shelterRoute.js';
+import heatRouter from './src/app/domain/heat/heatRoute.js';
 import { swaggerUi, swaggerDocs } from './src/config/swagger/swagger.js';
 import { errorMiddleware } from './src/app/global/errorHandler.js';
 
@@ -69,6 +70,7 @@ app.get('/swagger.json', (req, res) => {
 
 // Routes
 app.use('/api/members', memberRouter);
+app.use('/api/heat', heatRouter);
 app.use('/api/shelters', shelterRouter);
 
 // 404 handler
